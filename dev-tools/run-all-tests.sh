@@ -47,7 +47,6 @@ echo \
 "Executing force:apex:test:run \\
             --targetusername $SCRATCH_ORG_ALIAS \\
             --testlevel RunLocalTests \\
-            --outputdir ./temp/apex-test-results \\
             --resultformat human \\
             --synchronous \\
             --codecoverage \\

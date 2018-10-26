@@ -47,11 +47,11 @@
 version: 2
 jobs:
 ####################################################################################################
-## JOB:     setup-build-environment
+## JOB:     build
 ## PURPOSE: Creates an RSA private key in a build workspace directory based on values from 
 ##          environment variables that are available to this project.
 ####################################################################################################
-  setup-build-environment:
+  build:
     docker:
       - image: ncino/ci-sfdx
     steps:
@@ -106,7 +106,7 @@ jobs:
           root: /tmp/sfdx-keys
           paths:
             - dev-hub.key
-            - pkg-org.key
+            #- pkg-org.key
 
       # Store SFDX logs as artifacts
       - store_artifacts:
@@ -114,18 +114,18 @@ jobs:
           destination: sfdx-logs
 
 ####################################################################################################
-## JOB:     test-build-1
+## JOB:     test_build
 ## PURPOSE: Builds and tests against a specific org shape.
 ####################################################################################################
-  test-build-1:
+  test_build:
     docker:
       - image: ncino/ci-sfdx
     environment:
-      - SCRATCH_ORG_CONFIG: test-build-1-scratch-def.json
+      - SCRATCH_ORG_CONFIG: test-scratch-def.json
       - TEST_RESULTS_PATH:  /tmp/test-results
-      - TEST_RESULTS_DIR:   test-build-1
+      - TEST_RESULTS_DIR:   test
     steps:
-      - checkout                  # Required step.  Checks out the code from your repository.
+      - checkout                  # Required step.  Checks out the code from your repositoryd.
       - attach_workspace:
           at: /tmp/sfdx-keys      # Attaches the workspace where our private key files were stored.
       - run: 
@@ -136,7 +136,7 @@ jobs:
       - run: 
           name: Authenticate the Salesforce CLI to the Dev Hub using JWT
           command: |
-            #### Use the dev-hub.key that was created by the setup-build-environment job
+            #### Use the dev-hub.key that was created by the build job
             ## sfdx force:auth:jwt:grant
             # -i --CLIENTID                 Required. The OAuth client ID (sometimes referred to as the consumer key)
             # -f --JWTKEYFILE               Required. Path to a file containing the private key
@@ -175,7 +175,9 @@ jobs:
             ## sfdx force:user:permset:assign
             # -n --PERMSETNAME              Required. The name of the permission set to assign
             # -u --TARGETUSERNAME           Optional. Username or alias for the target org (Overrides default target org)
-            sfdx force:user:permset:assign  -n "FSC_DW" \
+            sfdx force:user:permset:assign  -n "ExpenseManager" \
+                                            -u circle_build_$CIRCLE_BUILD_NUM
+            sfdx force:user:permset:assign  -n "Traveler" \
                                             -u circle_build_$CIRCLE_BUILD_NUM
       - run:
           name: Create artifact directory to store test results
@@ -223,48 +225,31 @@ jobs:
           destination: sfdx-logs
 
 ####################################################################################################
-## JOB:     test-build-2
-## PURPOSE: Builds and tests against an alternate org shape
-## NOTE:    Tests not implemented for this job during the demo.  If moving this
-##          sample code into production, you should add additional tests here.
-####################################################################################################
-  test-build-2:
-    docker:
-      - image: ncino/ci-sfdx
-    environment:
-      - SCRATCH_ORG_CONFIG: test-build-2-scratch-def.json
-    steps:
-      - run:
-          name: Sleep for one minute
-          command: |
-            sleep 1m
-
-####################################################################################################
-## JOB:     create-beta-package
+## JOB:     create_beta_package
 ## PURPOSE: Deploys successfully built and tested code to the packaging org so it can be prepped
 ##          for a new BETA package version upload.
 ####################################################################################################
-  create-beta-package:
+  create_beta_package:
     docker:
       - image: ncino/ci-sfdx
     environment:
-      - PACKAGE_NAME:         "Falcon-X"                      # Name of your managed package
-      - PACKAGE_VERSION_NAME: "Spring 2018-C"                 # Version Name for your managed package
-      - METADATA_PACKAGE_ID:  "0331N000000gPC2QAM"            # Metadata Package ID (always begins with 033)
-      - PACKAGE_DIRECTORY:    "./sfdx-source/isvte_falcon_x"  # SFDX package directory that has your code
+      - PACKAGE_NAME:         "Travelexpenses"                # Name of your managed package
+      - PACKAGE_VERSION_NAME: "X (Travelexpenses)"                 # Version Name for your managed package
+      - METADATA_PACKAGE_ID:  "033F00000001hRiIAI"            # Metadata Package ID (always begins with 033)
+      - PACKAGE_DIRECTORY:    "./sfdx-source/travelexpenses_x"  # SFDX package directory that has your code
     steps:
       - checkout                  # Required step.  Checks out the code from your repository.
       - attach_workspace:
           at: /tmp/sfdx-keys      # Attaches the workspace where our private key files were stored.
-      - run: 
+      - run:
           name: Display version info for the Salesforce CLI and core plugins (will force updates if needed)
           command: |
             sfdx version          # Output the version of the CLI
             sfdx plugins --core   # Output the version of the core plugins
-      - run: 
+      - run:
           name: Authenticate the Salesforce CLI to the Packaging Org using JWT
           command: |
-            #### Use the pkg-org.key that was created by the setup-build-environment job
+            #### Use the pkg-org.key that was created by the build job
             ## sfdx force:auth:jwt:grant
             # -i --CLIENTID                 Required. The OAuth client ID (sometimes referred to as the consumer key)
             # -f --JWTKEYFILE               Required. Path to a file containing the private key
@@ -276,7 +261,7 @@ jobs:
                                       -u $PKGORG_SFDC_USERNAME \
                                       -d \
                                       -a PkgOrg
-      - run: 
+      - run:
           name: Convert SFDX source to MDAPI source
           command: |
             #### Convert SFDX source to MDAPI source so it can be deployed to the Packaging Org
@@ -284,12 +269,12 @@ jobs:
             # -r --ROOTDIR                  Optional. The directory that contains the source to convert.
             # -d --OUTPUTDIR                Optional. The output directory to export the Metadata API source to.
             # -n --PACKAGENAME              Optional. The name of the package to associate with the Metadata API source.
-            #    --LOGLEVEL                 Optional. The logging level for this command invocation. 
+            #    --LOGLEVEL                 Optional. The logging level for this command invocation.
             sfdx force:source:convert -r "$PACKAGE_DIRECTORY" \
                                       -d "./mdapi-source/circle_build_$CIRCLE_BUILD_NUM" \
                                       -n "$PACKAGE_NAME" \
                                       --loglevel error
-      - run: 
+      - run:
           name: Deploy MDAPI Source to the Packaging Org
           command: |
             #### Deploy the newly converted MDAPI Source to the Packaging Org
@@ -299,25 +284,25 @@ jobs:
             # -u --TARGETUSERNAME           Optional. A username or alias for the target org. Overrides the default target org.
             # -w --WAIT                     Optional. The number of minutes to wait for the command to complete. Default is –1 (no limit).
             #    --VERBOSE                  Optional. Indicates that you want verbose output from the deploy operation.
-            #    --LOGLEVEL                 Optional. The logging level for this command invocation. 
+            #    --LOGLEVEL                 Optional. The logging level for this command invocation.
             sfdx force:mdapi:deploy -d "./mdapi-source/circle_build_$CIRCLE_BUILD_NUM" \
                                     -l RunLocalTests \
                                     -u PkgOrg \
                                     -w 15 \
                                     --verbose \
                                     --loglevel error
-      - run: 
+      - run:
           name: List current version history for the first-generation package about to be uploaded
           command: |
             #### List version info for all first-gen packages
             ## sfdx force:package1:version:list
             # -u --TARGETUSERNAME           Optional. A username or alias for the target org. Overrides the default target org.
             # -i --PACKAGEID                Optional. ID of the metadata package (starts with 033) we want version info from.
-            #    --LOGLEVEL                 Optional. The logging level for this command invocation. 
+            #    --LOGLEVEL                 Optional. The logging level for this command invocation.
             sfdx force:package1:version:list  -u PkgOrg \
                                               -i $METADATA_PACKAGE_ID \
-                                              --loglevel error                                              
-      - run: 
+                                              --loglevel error
+      - run:
           name: Create (upload) a new MANAGED BETA package version
           command: |
             #### Create a new MANAGED BETA package version
@@ -327,7 +312,7 @@ jobs:
             # -d --DESCRIPTION              Optional. Package version description.
             # -u --TARGETUSERNAME           Optional. A username or alias for the target org. Overrides the default target org.
             # -w --WAIT                     Optional. The number of minutes to wait for the command to complete. Default is –1 (no limit).
-            #    --LOGLEVEL                 Optional. The logging level for this command invocation. 
+            #    --LOGLEVEL                 Optional. The logging level for this command invocation.
             sfdx force:package1:version:create  -i $METADATA_PACKAGE_ID \
                                                 -n "$PACKAGE_VERSION_NAME" \
                                                 -d "Package version generated by CI process" \
@@ -338,7 +323,7 @@ jobs:
       # Store SFDX logs as artifacts
       - store_artifacts:
           path: ~/.sfdx/sfdx.log
-          destination: sfdx-logs 
+          destination: sfdx-logs
 
 ####################################################################################################
 ## WORKFLOW:  build_and_test
@@ -348,26 +333,19 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - setup-build-environment:
+      - build:
           context: org-global
           filters:
             branches:
               only:
                 - non-existant-branch   # Normally, this might be "master". This should be configured after template is customized.
-      - test-build-1:
+      - test_build:
           context: org-global
           requires:
-            - setup-build-environment
-      - test-build-2:
+            - build
+      - create_beta_package:
           context: org-global
           requires:
-            - setup-build-environment
-      - create-beta-package:
-          context: org-global
-          requires:
-            - test-build-1
-            - test-build-2
-
-
+            - build
 
 #END-OF-CONFIG-FILE#

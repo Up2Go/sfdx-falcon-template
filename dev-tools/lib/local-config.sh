@@ -31,44 +31,44 @@
 #
 # Alias for the Dev Hub that should be used when creating scratch orgs for this project.
 # This variable will always need to be customized for individual developers.
-DEV_HUB_ALIAS="<%%-userAnswers.devHubAlias%>"
+DEV_HUB_ALIAS="DevHub"
 
 # Namespace Prefix.  Set to empty string ("") if this project is not building a managed package.
-NAMESPACE_PREFIX="<%-userAnswers.namespacePrefix%>"
+NAMESPACE_PREFIX="UP2GO_ITE"
 
 # Package Name.  Specified as part of the Package Detail info in your packaging org. 
 # Surround this value with double-quotes if your package name contains space characters.
 # Set to empty string ("") if this project is not building a managed package.
-PACKAGE_NAME="<%-userAnswers.packageName%>"
+PACKAGE_NAME="Travel Expenses"
 
 # Metadata Package ID.  Refers to the metadata package as a whole.  Must begin with "033".
 # Set to empty string ("") if this project is not building a managed package.
-METADATA_PACKAGE_ID="<%-userAnswers.metadataPackageId%>"
+METADATA_PACKAGE_ID="033F00000001hRiIAI"
 
 # Package Version ID. Refers to a specific, installable version of a package. Must begin with "04t".
 # Set to empty string ("") if this project is not building a managed package.
-PACKAGE_VERSION_ID="<%-userAnswers.packageVersionId%>"
+PACKAGE_VERSION_ID="04t0G000000T48FQAS"
 
 # Default Package Directory. Should match what is set in sfdx-project.json.
-DEFAULT_PACKAGE_DIR_NAME="<%-userAnswers.packageDirectory%>"
+DEFAULT_PACKAGE_DIR_NAME="UP2GO_ITE"
 
 # Alias for the primary Scratch Org used by this project.
-SCRATCH_ORG_ALIAS="$NAMESPACE_PREFIX-SCRATCH"
+SCRATCH_ORG_ALIAS="TRAVELEXPENSES-DEV"
 
 # Alias for the packaging org for this project.
-PACKAGING_ORG_ALIAS="$NAMESPACE_PREFIX-PACKAGE"
+PACKAGING_ORG_ALIAS="TRAVELEXPENSES-PACKAGING"
 
 # Alias for the subscriber test org used to test managed-beta package installs.
-SUBSCRIBER_ORG_ALIAS="$NAMESPACE_PREFIX-SUBSCRIBER"
+SUBSCRIBER_ORG_ALIAS="TRAVELEXPENSES-QA"
 
 # Git Remote URI. SSH or HTTPS URI that points to the Git remote repo used by this project.
 # GitHub is used as an example here, but any Git remote (ie. BitBucket) can be used.
 # Set to empty string ("") if this project is not being tracked in a remote repository.
-GIT_REMOTE_URI="<%-userAnswers.gitRemoteUri%>"
+GIT_REMOTE_URI="https://github.com/Up2Go/travelexpenses.git"
 
 # Location of the primary scratch-def.json file that should be used by SFDX-Falcon scripts that
 # create scratch orgs (eg. rebuild-scratch-org).
-SCRATCH_ORG_CONFIG="$PROJECT_ROOT/config/project-scratch-def.json"
+SCRATCH_ORG_CONFIG="$PROJECT_ROOT/config/dev-scratch-def.json"
 
 # Echo the variables set by this script prior to exiting.  Specify "false" to suppress the
 # display of local config that normally occurs when executing SFDX-Falcon based scripts.

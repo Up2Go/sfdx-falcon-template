@@ -193,48 +193,91 @@ validateScratchOrgDeletion () {
 #
 ##
 ###
+#### FUNCTION: cleanup () #######################################################
+###
+##
+#
+cleanup () {
+  # Confirm that the scratch org is no longer the default username in SFDX local config.
+  echoStepMsg "Delete Temp files"
+  if [ -d $PROJECT_ROOT/temp/data.out ]; then
+    rm -R $PROJECT_ROOT/temp/data.out
+  fi
+  
+  if [ -d $PROJECT_ROOT/data.out ]; then
+    rm -R $PROJECT_ROOT/data.out
+  fi
+}
+#
+##
+###
+#### FUNCTION: prepareDataImport () #####################################################################
+###
+##
+#
+prepareDataImport () {
+  # Run Anonymous code in the new Scratch Org.
+  echoStepMsg "Prepare data for import."
+  cd $PROJECT_ROOT
+
+  sfdx wry:file:replace -u $SCRATCH_ORG_ALIAS -i data
+  mv data.out $PROJECT_ROOT/temp/
+}
+#
+##
+###
 #### SCRATCH ORG SETUP (DELETE/CREATE/PUSH) ########################################################
 ###
 ##
 #
-# STEP 0
 # Reset the Step Message counter to reflect the number of TOTAL STEPS
 # in your rebuild process. For the baseline SFDX-Falcon template it's 4.
-resetStepMsgCounter 4
+resetStepMsgCounter 11
 
-# STEPS 1 and 2
 # Delete the current scratch org.
 deleteScratchOrg
 
-# STEP 3
 # Create a new scratch org using the scratch-def.json locally configured for this project.
 createScratchOrg
 
-# STEP 4 through ???
 # Install any packages (managed or unmanaged).
 # Template for calling this function:
-# installPackage #PACKAGE_VERSION_ID# \
-#                "#PACKAGE_NAME#" \
-#                "#STEP_MESSAGE#"
+#installPackage 04ti0000000TzXd "plantuml4force" "PlantUml"
 
-# STEP 5 through ???
 # Assign any permission sets that were added by installed packages.
 # Template for calling this function:
 # assignPermset #PACKAGED_PERMSET_NAME# 
 
-# STEP 6
 # Push metadata to the new Scratch Org.
 pushMetadata
 
-# STEP 7 through ????
 # Assign any permission sets that were added by your Source Push.
 # Template for calling this function:
-# assignPermset #PERMSET_NAME# 
+assignPermset ExpenseManager
+assignPermset Traveler
 
-# STEP 8 through ????
+# clean project before importing data
+cleanup
+
 # Import data used during development. You may need to make multiple calls
 # Template for calling this function:
-# importData "$PROJECT_ROOT/data/#DATA_PLAN_JSON#"
+prepareDataImport
+importData "$PROJECT_ROOT/data/CurrencyType-plan.json"
+importData "$PROJECT_ROOT/data/UP2GO_ITE__CustomSettings__c-plan.json"
+importData "$PROJECT_ROOT/temp/data.out/UP2GO_ITE__CompensationRate__c-plan.json"
+
+#clean project
+cleanup
+
+# Adjust Admin user
+sfdx force:data:record:update -s User -w "Name='User User'" -v "DefaultCurrencyIsoCode=EUR" -u $SCRATCH_ORG_ALIAS
+
+# Run all tests
+exec run-all-tests.sh
+
+# Open scratch org
+sfdx force:org:open
+
 
 #
 ##

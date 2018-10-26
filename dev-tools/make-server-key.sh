@@ -45,13 +45,13 @@ HEX_PRIVATE_KEY_FILE=$PROJECT_ROOT/temp/server.key.hex
 CSR_FILE=$PROJECT_ROOT/temp/server.csr
 SIGNED_SERVER_CERT_FILE=$PROJECT_ROOT/temp/server.crt
 
-COUNTRY_NAME="US"                   # Country Name (2 letter code)
-STATE="California"                  # State or Province Name
-LOCALITY="San Francisco"            # Locality Name (eg, city)
-ORGANIZATION_NAME="My Company"      # Organization Name (eg, company)
-ORGANIZATIONAL_UNIT="Software Dev"  # Organizational Unit Name (eg, section)
-COMMON_NAME="MyCompany.com"         # Common Name (eg. server FQDN or YOUR name)
-EMAIL="admin@mycompany.com"         # Email address
+COUNTRY_NAME="DE"                   # Country Name (2 letter code)
+STATE="BW"                  # State or Province Name
+LOCALITY="Tuebingen"            # Locality Name (eg, city)
+ORGANIZATION_NAME="UP2GO Germany GmbH"      # Organization Name (eg, company)
+ORGANIZATIONAL_UNIT="Application & Technology"  # Organizational Unit Name (eg, section)
+COMMON_NAME="up2go.com"         # Common Name (eg. server FQDN or YOUR name)
+EMAIL="robert.soesemann@up2go.com"         # Email address
 CERTIFICATE_EXPIRE_DAYS=365         # The number of days the self-signed certificate is valid for
 #
 #
